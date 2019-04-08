@@ -1,0 +1,42 @@
+#+TITLE: Предсказание температуры во времени и пространстве
+#+DATE: <2019-04-08>
+#+AUTHOR: Дробин М.Е. (МФТИ ГУ)
+#+EMAIL: drobin.me@phystech.edu
+
+#+latex_header: \usepackage[utf8]{inputenc} % for cyrilics
+#+latex_header: \usepackage[russian]{babel}
+#+latex_header: \usepackage[T2A]{fontenc}
+
+#+begin_abstract
+В этой работе исследуется качество прогнозирования температуры для одной из метерологической станций, обучая нейросетевые алгоритмы(RBF, MLP) и
+классические(KNN, spatial averaging, inverse distance methods) по данных от других станций в пределах Англии.
+#+end_abstract
+
+* Введение
+  \paragraph{} Температура воздуха - временные ряды с высоким временным разрешением - измеряют только в немногочисленных, далеко разнесенных друг от друга метерологических станциях.
+Поэтому появляется необходимость в пространственной интерполяции этих значений на области, где температура. Кроме пространственной интерполяции
+появляется необходимость в прогнозировании будущей темпертуры воздуха, т.е. временной интерполяции. Такие задачи появляются в сельском хозяйстве,
+прогнозировании погоды в городских условиях и т.д.
+  \paragraph{} В качестве данных используется почасовая информация(влажность, ...) с 30 метерологических станций Англии(каждая в отдельном городе) 
+  за 2 года. И для некоторых из них предсказывается температура. Данные взяты из сервиса darksky.
+* Обзор литературы
+  \paragraph{} В статье [[https://journals.ametsoc.org/doi/pdf/10.1175/1520-0442%25282000%2529013%253C0886%253ASIOSAT%253E2.0.CO%253B2][Spatial Interpolation of Surface Air Temperatures...]] авторы сравнили качество MLP и spatial average, knn, 
+  inverse distance methods для задачи интерполяции температуры на 11 NOAA станций, на которых измеряют температуру. Эти станции расположены
+  примерно в одном штате. Температура с этих станций - это множество ответов алгоритма, а данные с GCM(general circulation model) - численное модели - это мн-возможным
+  объектов. Такая задача называется downscaling GCM. Трудность заключается в том,  что пространственное разрешение выходных данных GCM - 
+  от 2.5° × 2.5° до 8° × 10° в долготу и ширину - это слишком грубо для предсказания - поэтому обучают по такой сетке нейросеть и предсказывают
+  температуру для точек между сетки - выхода  GCM. Авторы предсказывали максимальную температуру за день T_max и посчитали качество нейросети(архите-
+  ктура нейросети: 4-30-11 и 16-54-11 с сигмоидной функцией активацией). Для сетки с 4мя входами R^2 и rmse были в среднем по 11 станциям 5.69 и 0.93; для сетки с 16ю входами - 5.12 и 0.94.
+
+  \paragraph{} В статье [[https://pdf.sciencedirectassets.com/271431/1-s2.0-S0960148100X00614/1-s2.0-S0960148101000829/main.pdf?x-amz-security-token%3DAgoJb3JpZ2luX2VjEO3%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FwEaCXVzLWVhc3QtMSJHMEUCIAdDy8CmeMqBp%252FDIV9wy8NjzJvT4VrtFflsItElOWZs4AiEAsUJEEV%252BA63Sqx1vu%252Fb80hT9mFdZkxwZu8rRrvGRv8yEq4wMIpf%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FARACGgwwNTkwMDM1NDY4NjUiDJ87A7i5iCg1sO5%252BnSq3A5DNoQXqip0s1ew%252BhcGhBDpEbRzvk6Nj6rnjixlazGEfEAK2iYM3ASU5DzlGjswRUYskjv8KzSDJSLVbZCS52MMSL%252Fw7rJ97mbGbT5vfgNDYrEgIzNkwKECU%252Fhf6Nmy51Dd%252BxQc%252FsrDHExbqjzdctCIEeSLk3YB81Vc1OcDtiZd1BLk7Xz59LmvznqBxPUZUtNlZYQz7iIRmWRyHE9ebov43AtSwRriDv65fiREdOmCbgs0%252FiY69l%252FhgnwB3%252BxS1skUT73HCJqjp07dbEO3CLqArgR69VGdhV%252B4Y%252B3Mz2y8m3KGx%252FqxtWmOCGE8nxUe38MalCA9xURB%252By2wC%252BgL3Yyq5ws4o1gZeuJX9cSw5%252BIECSeCuYyqFcN2xPqb7kjrPr1niA8qE9gYWzv6BrgMyQqz1zkkTRy8y6WkgkLnS1c2cHMxtBcFR7D6Y1r%252BREBOP5ZdT%252F5%252FsnQEQ1fTer0P%252FlQMCWBeGdvYzAlPfHOlV1LzgDe0%252BvbhXJO%252FZutAk%252BBdbytMoLsPnyQYMPWwi3mHa3TQp7RnkPNJ%252BVl6RcsxBO0oWeK85cVuDQl%252F1op0WLk%252FdqsIJ%252B6B6kFkw8aON5QU6tAF226MDdFBM2AF6X3MF1sVht1Own7xx2QP3qYmiX8s5pepW017OoPzTfrKbyYqI4ixVqgQOhM5hu8QMr7zqMprnQ9oAsU784rQ6JIrp57V6ZFjpifvVU6jKB%252BIQuFD0jk4VD7ss5SKHefk%252BvIxi4ryStkOKap0xuLcqcGmLkCjLXfeB3Ez7BppyLBEnkG24wJV8oIQl6APw4cs5WoSA9IZYQw1fci5K3R8icKOUX8YLWSfDAUg%253D&AWSAccessKeyId%3DASIAQ3PHCVTY3BOYTO6O&Expires%3D1554211582&Signature%3DSijhGOj93NAMuoEK5C6dV6K%252BBTg%253D&hash%3D6d9bc013c5d06b004b54c23791cfc5bd9efbd42028aa74f81a73fc58516f1ff5&host%3D68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii%3DS0960148101000829&tid%3Dspdf-d63dc633-1c37-477d-8e91-e7797c20a5a4&sid%3D0fe66f84266271459519fa87abe34fe3c761gxrqb&type%3Dclient][Application of neural networks for theprediction of hourly mean surface temperaturesin Saudi Arabia]] авторы использовали почасовые
+  данные с шести метерологических станций за 2 года с равнины, расположенной в Китае и ограниченной горами. 5 из них входят в мн-во объектов алгоритмов, для шестой предсказывается температу. 
+  60% данных использовалось для обучения, остальное для теста. Сравнили MLP 5-17-1 с tanh активацией и RBF с скрытым слоем из 7450 нейронов и гауссовой функцией
+  активацией. Качество на тестовой выборке: R^2 и rmse(°C) для MLP равны 0.96 и 1.067, а для RBF - 0.95 и 1.12 соответственно.
+
+  \paragraph{} Данные по нескольким городам - погодные данные, взятые из измерителей в аэропортах этих городов.
+Задача - предсказать температуру(или прочие погодные показатели, напр., влажность..) для города, не использованного
+в обучении,  используя нейросетевые алгоритмы.
+
+* Ссылки
+[[http://www.machinelearning.ru/wiki/images/archive/f/fc/20130211221536%2521Voron-ML-Intro-slides.pdf][Основные понятия и обозначения в машинном обучении. Воронцов К.В.]]
+

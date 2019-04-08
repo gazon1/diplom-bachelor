@@ -1,0 +1,153 @@
+"Предсказание температуры во времени и пространстве"
+* Вступление
+** Что я буду делать
+Данные по нескольким городам - погодные данные, взятые из измерителей в аэропортах этих городов.
+Задача - предсказать температуру(или прочие погодные показатели, напр., влажность..) для города, не использованного
+в обучении,  используя нейросетевые алгоритмы
+
+** Мотивация
+Weather prediction becoming increasingly vital for scientists, agriculturists,
+farmers, global food security, disaster management and related
+organizations to understand the natural phenomena to plan and
+be prepared for the future
+** Данные
+Weather prediction is usually done using the data gathered by
+remote sensing satellites. Various weather parameters like
+temperature, rainfall, and cloud conditions are projected using
+image taken by meteorological satellites to access future trends.
+The satellite based systems are expensive and requires
+complete support systems.
+** Обзоры статей
+*** Обзорные статьи
+- Data Mining Techniques for Weather Prediction: A Revie
+- [[https://www.ijert.org/research/weather-forecasting-using-neural-network-IJERTCONV5IS01197.pdf][Weather Forecasting usingNeural Network]]
+- [[https://pdfs.semanticscholar.org/617b/0fc5d155236150d732fe95e93c3c479316d4.pdf][Daily Weather Forecasting using ArtificialNeural Network]]
+- [[https://www.ijert.org/research/a-review-study-of-weather-forecasting-using-artificial-neural-network-approach-IJERTV2IS110623.pdf][A Review StudyofWeatherForecastingUsingArtificialNeuralNetworkApproach]]
+*** [[http://www.unde.ro/bmif/docs/20091/10PETRE_ELIA.pdf][Elia Georgiana Petre ”A Decision Tree for Weather Prediction”]]
+- year, month, average pressure, relative humidity, clouds quantity, precipitations and average temperature - помесячные данные
+- 48 строк данных
+- 7 признаков
+- Бинаризовали все признаки и target
+- weka.classifiers.trees.SimpleCart -S 1 -M 2.0 -N 5 -C 1.0
+- Написали правила, которые породила модель
+- 83.3% accuracy
+*** [[http://citeseerx.ist.psu.edu/viewdoc/download?doi%3D10.1.1.193.3451&rep%3Drep1&type%3Dpdf][Application of Artificial Neural Networks for Temperature Forecasting ]]
+    [[https://pdfs.semanticscholar.org/b3dd/b71451abd3685d7aea8e5daf728b91a999cc.pdf][An Efficient Weather Forecasting System using Artificial Neural Network]]
+
+- Данные за 10 лет(1996-2006) с метерологической станции в Kermanshah  
+- train/test split 67%/33%
+- MAE
+- Фичи(данные за каждые 3 часа): wet. bulb temp, dry bulb temp., wind speed, humidity, pressure
+- Фичи(данные за день): sunshine, radiation
+- target - dry bulb temp. 
+- MLP, 3 слоя: input -> linear -> tanh (6 hidden neurons) -> linear -> sigmoid -> linear
+- 2000 epochs
+- Обучались до ошибки на тесте 10^{-4}
+- Вместо backprop использовали step size scaling mechanism SCG (Conjugate Gradient Method)
+- Нормализовали данные к отрезку [-1; 1] (с ненормированными данными плохо сходится): (value_current - value_min) / (value_max - value_min) - 1
+
+*** [[https://ieeexplore.ieee.org/stamp/stamp.jsp?tp%3D&arnumber%3D5647319][Training Back Propagation Neural Networks with Genetic Algorithm for Weather Forecasting]]
+- daily data: humidity, dry temp., wind speed/direction, soil temp., sunshine, rainfall, evaporation, 
+vapour pressure
+- normilize data
+- train MLP by backpropagation + genetic algorithm instead of only  back prop
+- MAPE
+- MLP, input (3 neurons) -> hidden layer (2 neurons) -> output (1 neuron)
+- results better than just backprop
+*** [[http://citeseerx.ist.psu.edu/viewdoc/download?doi%3D10.1.1.212.5509&rep%3Drep1&type%3Dpdf][A Feature Based Neural Network Model for Weather Forecasting]]
+- used features:
+moving average (MA)
+exp. moving average (EMA)
+oscilator = MA_{n1} - MA_{n2} or EMA_{n1} - EMA_{n2} where n1 > n2 (OSC)
+rate of change(ROC)
+moments
+coef. of skewness
+coef. of kurtosis
+T_max, T_min
+- daily data for 15, 30 and 45 weeks
+- metric - R^{2}
+
+
+
+
+
+*** [[https://journal.r-project.org/archive/2011/RJ-2011-009/RJ-2011-009.pdf][Probabilistic Weather Forecasting in R]]
+*** [[http://idlcc.fc.ul.pt/pdf/Ann.pdf][Simulation of daily temperatures for climatechange scenarios over Portugal: a neural network model approach]]
+*** [[https://www.ijcaonline.org/archives/volume143/number11/zaytar-2016-ijca-910497.pdf][Sequence to Sequence Weather Forecasting with LongShort-Term Memory Recurrent Neural Networks]]
+- LSTM
+- optimizer RMSprop
+- loss func MSE
+- 9 cities in Morocco
+- data: temp., humidity, wind speed for every hour
+- 2 models: forecast 24 and 72 hours
+- 15 years of data(2000-2015)
+- architecture:
+input (3 inouts) -> lstm (100) -> dense(100, 100) -> RELU -> repeat vector (100; 24, 100) -> lstm(24,100; 24, 100) -> time
+
+- All of the LSTM’s parameters were initialized with the uniformdistribution between -0.05 and 0.05.
+- The Mini-batch gradient descent was used with a fixed learningrate of 0.001.
+- For  the  gradient  method,  Batches  of  512  sequences  and  100epochs were trained
+
+
+*** [[https://deepstruct.github.io/ICML17/1stDeepStructWS_paper_2.pdf][Automating weather forecasts based on convolutional network]]
+[[https://github.com/prl900/DeepWeather][code]]
+use dataset of images of heat distirbution on 3 different heights generated by NWP ecmwf model and classify
+wheather it will be rain of dry
+
+*** [[http://cs229.stanford.edu/proj2016/report/HolmstromLiuVo-MachineLearningAppliedToWeatherForecasting-report.pdf][Machine Learning Applied to Weather Forecasting]]
+- used Linera regression, functional regr. and prefessional predictions
+- train set - 2 years/ test set the next 1 year
+- data(daily): summayry, mean pressure, mean hummidity, max and min temp.
+- 4-fold forward chaining time series validation
+- predicting min and max temp. for next seven days
+
+
+*** google "neural network temperature spatial interpolation"
+
+*** [[https://journals.ametsoc.org/doi/pdf/10.1175/1520-0442%25282000%2529013%253C0886%253ASIOSAT%253E2.0.CO%253B2][Spatial Interpolation of Surface Air Temperatures Using Artificial Neural Networks]]
+- interpolate maximum daily temp. for 11 statiions.
+- input(4 or 16) -> sigmoid -> hidden layer(30 or 54 neurons) -> sigmoid -> output(11 stations max. daily temp.)
+- 80% of data (14,5 k days) for training and 20%(3k days) for testing)
+- 10k epochs
+- RMSE loss
+- R^{2} metric
+
+
+
+
+
+*** [[https://pdf.sciencedirectassets.com/271431/1-s2.0-S0960148100X00614/1-s2.0-S0960148101000829/main.pdf?x-amz-security-token%3DAgoJb3JpZ2luX2VjEO3%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FwEaCXVzLWVhc3QtMSJHMEUCIAdDy8CmeMqBp%252FDIV9wy8NjzJvT4VrtFflsItElOWZs4AiEAsUJEEV%252BA63Sqx1vu%252Fb80hT9mFdZkxwZu8rRrvGRv8yEq4wMIpf%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FARACGgwwNTkwMDM1NDY4NjUiDJ87A7i5iCg1sO5%252BnSq3A5DNoQXqip0s1ew%252BhcGhBDpEbRzvk6Nj6rnjixlazGEfEAK2iYM3ASU5DzlGjswRUYskjv8KzSDJSLVbZCS52MMSL%252Fw7rJ97mbGbT5vfgNDYrEgIzNkwKECU%252Fhf6Nmy51Dd%252BxQc%252FsrDHExbqjzdctCIEeSLk3YB81Vc1OcDtiZd1BLk7Xz59LmvznqBxPUZUtNlZYQz7iIRmWRyHE9ebov43AtSwRriDv65fiREdOmCbgs0%252FiY69l%252FhgnwB3%252BxS1skUT73HCJqjp07dbEO3CLqArgR69VGdhV%252B4Y%252B3Mz2y8m3KGx%252FqxtWmOCGE8nxUe38MalCA9xURB%252By2wC%252BgL3Yyq5ws4o1gZeuJX9cSw5%252BIECSeCuYyqFcN2xPqb7kjrPr1niA8qE9gYWzv6BrgMyQqz1zkkTRy8y6WkgkLnS1c2cHMxtBcFR7D6Y1r%252BREBOP5ZdT%252F5%252FsnQEQ1fTer0P%252FlQMCWBeGdvYzAlPfHOlV1LzgDe0%252BvbhXJO%252FZutAk%252BBdbytMoLsPnyQYMPWwi3mHa3TQp7RnkPNJ%252BVl6RcsxBO0oWeK85cVuDQl%252F1op0WLk%252FdqsIJ%252B6B6kFkw8aON5QU6tAF226MDdFBM2AF6X3MF1sVht1Own7xx2QP3qYmiX8s5pepW017OoPzTfrKbyYqI4ixVqgQOhM5hu8QMr7zqMprnQ9oAsU784rQ6JIrp57V6ZFjpifvVU6jKB%252BIQuFD0jk4VD7ss5SKHefk%252BvIxi4ryStkOKap0xuLcqcGmLkCjLXfeB3Ez7BppyLBEnkG24wJV8oIQl6APw4cs5WoSA9IZYQw1fci5K3R8icKOUX8YLWSfDAUg%253D&AWSAccessKeyId%3DASIAQ3PHCVTY3BOYTO6O&Expires%3D1554211582&Signature%3DSijhGOj93NAMuoEK5C6dV6K%252BBTg%253D&hash%3D6d9bc013c5d06b004b54c23791cfc5bd9efbd42028aa74f81a73fc58516f1ff5&host%3D68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii%3DS0960148101000829&tid%3Dspdf-d63dc633-1c37-477d-8e91-e7797c20a5a4&sid%3D0fe66f84266271459519fa87abe34fe3c761gxrqb&type%3Dclient][Application of neural networks for theprediction of hourly mean surface temperaturesin Saudi Arabia]]
+*** [[https://pdfs.semanticscholar.org/e112/49938d5576042e88ea56064bb57c167d9860.pdf][Application of Artificial Neural Networks in Weather Forecasting: A Comprehensive Literature Review]]
+*** [[https://speech.di.uoa.gr/sppages/spppdf/ICPRAM%252013%2520Deligiorgi%2520Kouroupetroglou-2.pdf][Artificial Neural Network based Methodologies for the Spatial and Temporal Estimation of Air Temperature]]
+*** [[https://pdfs.semanticscholar.org/e112/49938d5576042e88ea56064bb57c167d9860.pdf][Application of Artificial Neural Networks in Weather Forecasting: A Comprehensive Literature Review]]
+
+
+*** [[https://www.evernote.com/shard/s351/res/5d9de198-83cb-4d82-bf27-dac7236f4dbf/02-Tektas_2010.pdf][Weather forecasting using ANFIS and ARIMA models. A case study for Istanbul]]
+*** [[https://www.evernote.com/shard/s351/res/335b33e9-56c9-47c7-95c7-a447a99a7099/NPC2011.pdf][Intelligent methods for weather forecasting: A review]]
+* Основвная часть
+** DONE Я спросил у Дмитрия Пантюхин 1 апреля
+- Если делать ARIM'у модель, то придется
+** [[https://www.jessicayung.com/lstms-for-time-series-in-pytorch/][lstm for time series in pytorch]]
+** [[https://github.com/zhangxu0307/time_series_forecasting_pytorch][time series forecasting pytorch]]
+** [[http://chandlerzuo.github.io/blog/2017/11/darnn][pytorch for finance forecasting]]
+** [[https://www.analyticsvidhya.com/blog/2018/09/multivariate-time-series-guide-forecasting-modeling-python-codes/][multivariate arima]]
+** [[https://github.com/elena-petrova/rossmann_TSA_forecasts/blob/master/Rossmann_Sales.ipynb][time series in kaggle with phophet]]
+** [[https://arnesund.com/2017/02/26/using-facebook-prophet-forecasting-library-to-predict-the-weather/]]
+
+
+
+** DONE Я сагрегировал данные по 1 дню. Сделал фичи: max temp., mean влажность
+** TODO Я разделил данные на 80% - обучение и 20% - тест
+** DONE Я выбрал 4-11 станций, для которых я буду предсказывать max temp.
+** TODO Я написал mlp на pytorch и обучить его на этих данных. Оптимизировать RMSE
+https://spandan-madan.github.io/A-Collection-of-important-tasks-in-pytorch/
+https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235/20
+** TODO Я убрал nan из данных - сеть не обучается с ними
+** TODO Я запустил код для моих данных [[https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/23_Time-Series-Prediction.ipynb][отсюда]]
+** TODO Я написал обзор 3 статей и отправил Пантюхину
+** TODO Я написал введение в задачу и отправил Пантюхину
+
+
+
+
+* Заключение
