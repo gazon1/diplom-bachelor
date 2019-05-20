@@ -1,0 +1,325 @@
+% Created 2019-05-15 Ср 21:08
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc} % for cyrilics
+\usepackage[russian, english]{babel}
+\usepackage[T2A]{fontenc}
+\author{Дробин М.Е. (МФТИ ГУ)}
+\date{\textit{<2019-04-08 Пн>}}
+\title{Предсказание температуры во времени и пространстве}
+\hypersetup{
+ pdfauthor={Дробин М.Е. (МФТИ ГУ)},
+ pdftitle={Предсказание температуры во времени и пространстве},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 25.2.2 (Org mode 9.2.3)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\begin{abstract}
+В этой работе исследуется качество прогнозирования температуры для одной из метерологической станций, обучая нейросетевые алгоритмы(RBF, MLP) и
+классические(KNN, spatial averaging, inverse distance methods) по данных от других станций в пределах Англии.
+\end{abstract}
+
+\section{Введение}
+\label{sec:orgbc64d6d}
+Температура воздуха - временные ряды с высоким временным разрешением - измеряют только в немногочисленных, далеко
+разнесенных друг от друга метерологических станциях.  Поэтому появляется необходимость в пространственной интерполяции
+этих значений на области, где температура. Кроме пространственной интерполяции появляется необходимость в
+прогнозировании будущей темпертуры воздуха, т.е. временной интерполяции. Такие задачи появляются в сельском хозяйстве,
+прогнозировании погоды в городских условиях и т.д.
+
+В качестве данных используется почасовая информация(влажность, \ldots{}) с 30 метерологических станций Англии(каждая в
+отдельном городе) за 2 года. И для некоторых из них предсказывается температура. Данные взяты из сервиса darksky.
+\section{Обзор литературы}
+\label{sec:org288e0ca}
+В статье \href{https://journals.ametsoc.org/doi/pdf/10.1175/1520-0442\%282000\%29013\%3C0886\%3ASIOSAT\%3E2.0.CO\%3B2}{Spatial Interpolation of Surface Air Temperatures\ldots{}} авторы сравнили качество MLP и spatial average, knn, 
+inverse distance methods для задачи интерполяции температуры на 11 NOAA станций, на которых измеряют температуру. Эти станции расположены
+примерно в одном штате. Температура с этих станций - это множество ответов алгоритма, а данные с GCM(general circulation model) - численное модели - это мн-возможным
+объектов. Такая задача называется downscaling GCM. Трудность заключается в том,  что пространственное разрешение выходных данных GCM - 
+от 2.5° × 2.5° до 8° × 10° в долготу и ширину - это слишком грубо для предсказания - поэтому обучают по такой сетке нейросеть и предсказывают
+температуру для точек между сетки - выхода  GCM. Авторы предсказывали максимальную температуру за день T\textsubscript{max} и посчитали качество нейросети(архите-
+ктура нейросети: 4-30-11 и 16-54-11 с сигмоидной функцией активацией). Для сетки с 4мя входами R\textsuperscript{2} и rmse были в среднем по 11 станциям 5.69 и 0.93; для сетки с 16ю входами - 5.12 и 0.94.
+
+В статье \href{https://pdf.sciencedirectassets.com/271431/1-s2.0-S0960148100X00614/1-s2.0-S0960148101000829/main.pdf?x-amz-security-token=AgoJb3JpZ2luX2VjEO3\%2F\%2F\%2F\%2F\%2F\%2F\%2F\%2F\%2F\%2FwEaCXVzLWVhc3QtMSJHMEUCIAdDy8CmeMqBp\%2FDIV9wy8NjzJvT4VrtFflsItElOWZs4AiEAsUJEEV\%2BA63Sqx1vu\%2Fb80hT9mFdZkxwZu8rRrvGRv8yEq4wMIpf\%2F\%2F\%2F\%2F\%2F\%2F\%2F\%2F\%2F\%2FARACGgwwNTkwMDM1NDY4NjUiDJ87A7i5iCg1sO5\%2BnSq3A5DNoQXqip0s1ew\%2BhcGhBDpEbRzvk6Nj6rnjixlazGEfEAK2iYM3ASU5DzlGjswRUYskjv8KzSDJSLVbZCS52MMSL\%2Fw7rJ97mbGbT5vfgNDYrEgIzNkwKECU\%2Fhf6Nmy51Dd\%2BxQc\%2FsrDHExbqjzdctCIEeSLk3YB81Vc1OcDtiZd1BLk7Xz59LmvznqBxPUZUtNlZYQz7iIRmWRyHE9ebov43AtSwRriDv65fiREdOmCbgs0\%2FiY69l\%2FhgnwB3\%2BxS1skUT73HCJqjp07dbEO3CLqArgR69VGdhV\%2B4Y\%2B3Mz2y8m3KGx\%2FqxtWmOCGE8nxUe38MalCA9xURB\%2By2wC\%2BgL3Yyq5ws4o1gZeuJX9cSw5\%2BIECSeCuYyqFcN2xPqb7kjrPr1niA8qE9gYWzv6BrgMyQqz1zkkTRy8y6WkgkLnS1c2cHMxtBcFR7D6Y1r\%2BREBOP5ZdT\%2F5\%2FsnQEQ1fTer0P\%2FlQMCWBeGdvYzAlPfHOlV1LzgDe0\%2BvbhXJO\%2FZutAk\%2BBdbytMoLsPnyQYMPWwi3mHa3TQp7RnkPNJ\%2BVl6RcsxBO0oWeK85cVuDQl\%2F1op0WLk\%2FdqsIJ\%2B6B6kFkw8aON5QU6tAF226MDdFBM2AF6X3MF1sVht1Own7xx2QP3qYmiX8s5pepW017OoPzTfrKbyYqI4ixVqgQOhM5hu8QMr7zqMprnQ9oAsU784rQ6JIrp57V6ZFjpifvVU6jKB\%2BIQuFD0jk4VD7ss5SKHefk\%2BvIxi4ryStkOKap0xuLcqcGmLkCjLXfeB3Ez7BppyLBEnkG24wJV8oIQl6APw4cs5WoSA9IZYQw1fci5K3R8icKOUX8YLWSfDAUg\%3D\&AWSAccessKeyId=ASIAQ3PHCVTY3BOYTO6O\&Expires=1554211582\&Signature=SijhGOj93NAMuoEK5C6dV6K\%2BBTg\%3D\&hash=6d9bc013c5d06b004b54c23791cfc5bd9efbd42028aa74f81a73fc58516f1ff5\&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61\&pii=S0960148101000829\&tid=spdf-d63dc633-1c37-477d-8e91-e7797c20a5a4\&sid=0fe66f84266271459519fa87abe34fe3c761gxrqb\&type=client}{Application of neural networks for theprediction of hourly mean surface temperaturesin Saudi Arabia} авторы использовали почасовые
+данные с шести метерологических станций за 2 года с равнины, расположенной в Китае и ограниченной горами. 5 из них входят в мн-во объектов алгоритмов, для шестой предсказывается температу. 
+60\% данных использовалось для обучения, остальное для теста. Сравнили MLP 5-17-1 с tanh активацией и RBF с скрытым слоем из 7450 нейронов и гауссовой функцией
+активацией. Качество на тестовой выборке: \(R^2\) и rmse(°C) для MLP равны 0.96 и 1.067, а для RBF - 0.95 и 1.12 соответственно.
+
+  Данные по нескольким городам - погодные данные, взятые из измерителей в аэропортах этих городов.
+Задача - предсказать температуру(или прочие погодные показатели, напр., влажность..) для города, не использованного
+в обучении,  используя нейросетевые алгоритмы.
+
+\section{Получение данных}
+\label{sec:org862f09d}
+Данные были получены через API сервиса \href{https://darksky.net}{darksky} и библиотеки для Python \href{https://pypi.org/project/darkskylib/}{darkskylib}. Для каждого города были скачаны
+почасовые данные(иногда с пропусками) с с 1 января 2009 по 1 января 2018 года. Следующие фичи были скачаны:
+\begin{itemize}
+\item температура воздуха(temperature)
+\item скорость ветра (windspeed)
+\item процент(от 0 до 1) покрытости неба облаками(cloudCover)
+\item относительная влажность, от 0 до 1 (humidity)
+\item видимость(visibility) - категориальная переменная, принимает только
+\item точка росы в градусах цельсия(dewPoint)
+\item краткое описание погоды - категориальная переменная (summary)
+\begin{itemize}
+\item clear-day
+\item clear-night
+\item rain
+\item snow
+\item sleet
+\item wind
+\item fog
+\item cloudy
+\item partly-cloudy-day
+\item partly-cloudy-night
+\end{itemize}
+\item температура "по ощущениям" в градусах цельсия (apparentTemperature)
+\end{itemize}
+
+\href{https://github.com/gazon1/diplom/blob/master/main.py}{Алгоритм} закачки данных:
+for каждый город в списке городов:
+    for каждая дата в списке дат с 2009 по 2018 год c периодом в  1 час:
+        скачать исторические данные за эту дату для этого города
+    добавить данные за этот город в общий датафрейм
+
+\begin{verbatim}
+cities = get_cities(['Oxford', 'Cambridge', 'Brighton And Hove', 'London'])
+for city, key in zip(cities[: len(keys)], keys.keys()): 
+    df = pd.DataFrame()
+    date_start = get_last_downloaded_date(city[0])
+    date_end = dt(2018, 1, 1, hour=0)
+
+    try:
+	date_list = get_list_of_days(date_start, date_end)
+    except AssertionError:
+	continue
+
+    logger.info(f"Скачиваю данные с города {city[0]}")
+    for date in tqdm(date_list):
+	try:
+	    _city = forecast(key, city[1], city[2], time=date)
+	    error = False
+	except requests.exceptions.HTTPError as e:
+	    error = True
+	    logger.error(str(e.request) + str(e.response) + str(e))
+	    break
+	except Exception as e:
+	    error = True
+	    logger.error(str(e))
+	    break
+	try:
+	    for i in range(len(_city.hourly)):
+		values = [to_date_from_unix_time(_city.hourly[i]['time'])]
+		for column in columns:
+		    try:
+			values.append(_city.hourly[i][column])
+		    except KeyError as e:
+			values.append(None)
+		    t = pd.DataFrame(values).T
+
+		    df = pd.concat((df ,t))
+	    except AttributeError as e:
+		logger.error(str(e))
+		error =True
+
+	if df.shpape[0] > 0:
+	    df.columns = ["time"] + columns
+	    df = df.set_index("time")
+
+	    path = os.path.join(CURRENT_DIR, "diplom_data/" + str(city[0]) + ".csv")
+	    with open(path, 'a') as f:
+		df.to_csv(f, index=True, header=False)
+
+		keys[key] = True #key is used, dont use it again today
+\end{verbatim}
+
+\section{EDA}
+\label{sec:org602c4a2}
+\begin{center}
+\includegraphics[width=15cm]{./pics/sesonal_decomposition.png}
+\end{center}
+\begin{center}
+\includegraphics[width=15cm]{./pics/rolling_mean.png}
+\end{center}
+
+\begin{itemize}
+\item Есть ненулевой тренд
+\item четко выраженная дневная сезонность
+\item годовая сезонность
+\end{itemize}
+\section{Эксперименты}
+\label{sec:org7d2340e}
+
+\subsection{Схема валидации}
+\label{sec:org922a7b8}
+Модели обучались на первых 80\% данных - до 2016-03-15. Валидировались модели на оставшихся 20\% данных - около 2х
+лет. Причина выбора такой схемы валидации проста -  у нас имеется относительно большое кол-во данных(в сравнии с чем?) и
+более сложные схемы валидации, например, \href{https://habr.com/ru/company/ods/blog/327242/}{cross-validation on a rolling basis}, оказываются не нужны для построения
+устойчивой оценки алгоритма. Более сложные схемы валидации часто применяют, когда данных мало и делить исходную выборку
+на 2 невыгодно.
+
+\subsection{Baseline}
+\label{sec:org914ebeb}
+В качестве алгоритма для сравнения было взято простое предсказание температуры, равное предыдущему значению:
+\begin{verbatim}
+def evaluate_naive_method():
+    batch_maes = []
+    for step in range(val_steps):
+	samples, targets = next(val_gen)
+	preds = samples[:, -1, 1]
+	mae = np.mean(np.abs(preds - targets))
+	batch_maes.append(mae)
+    return np.mean(batch_maes)
+\end{verbatim}
+
+Этот алгоритм предсказывает на валидационной выборке с точностью до +/- 2.2 градуса Цельсия
+
+\subsection{MLP}
+\label{sec:orgb794ba7}
+Модель обучались на первых 80\% данных - до 2016-03-15. Валидировалась - на оставшихся 20\% данных - около 2х лет.
+
+Данные были нормированы на среднее и дисперсию: \(x_{i} = \frac{x_{i} - \overline{x}}{\sigma}\), где x - это отдельная
+фича или таргет (колонка в массиве объекты x фичи) и берется дисперсия и среднее этой фичи и она нормирутеся на свое
+среднее и свою дисперсию
+
+фичи: только температуры 3 городов Оксфорд, Кембридж, Брайтон энд Хов, таргет - это Лондон.
+
+\begin{center}
+\includegraphics[width=15cm]{./pics/map city predict.png}
+\end{center} 
+
+MLP обучался следующим образом: брали данные за 5 дней и температуру Лондона на следующие 24 часа. Оптимизировали mae.
+Архитектура нейросети: полносвязный слой с 32 нейронами и relu активацией и полносвязный слой с одним нейроном без
+функции активации на выходе. Оптимизатор - RMSprop. Для более быстрой и лучшей сходимости, скорость обучения делилась
+на 10, когда функция потерь на валидации увеличивалась или не изменялась:
+
+Генератор данных на керасе для обучения нейросети был заимствован из книги "Deep learning with Python". См. код \href{https://github.com/fchollet/deep-learning-with-python-notebooks/blob/master/6.3-advanced-usage-of-recurrent-neural-networks.ipynb}{здесь}
+
+\begin{verbatim}
+model = Sequential()
+model.add(layers.Flatten(input_shape=(lookback // step, data.shape[-1])))
+model.add(layers.Dense(32, activation='relu'))
+model.add(layers.Dense(1))
+
+model.compile(optimizer=RMSprop(), loss='mae')
+callbacks_list = [
+    keras.callbacks.ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.1,
+    patience=1,
+    verbose = 1
+    )
+]
+history = model.fit_generator(train_gen,
+			      steps_per_epoch=train_steps,
+			      epochs=20,
+			      validation_data=val_gen,
+			      validation_steps=val_steps,
+			      callbacks=callbacks_list)
+\end{verbatim}
+
+\begin{center}
+\includegraphics[width=10cm]{./pics/mlp_loss.png}
+\end{center}
+
+Отсюда видно, что нейросеть выучила всю информацию из данных и строить модель сильнее нет смысла. Например, если
+попробовать обучить LSTM на тех же данных, то можно увидеть, что сеть не сможет превзойти результат MLP:
+\begin{center}
+\includegraphics[width=10cm]{./pics/lstm_loss.png}
+\end{center}
+\subsection{LSTM}
+\label{sec:org5f9df91}
+LSTM обучается абсолютно так же, как и MLP
+\subsection{SARIMA(facebook prophet)}
+\label{sec:org7f44b10}
+Так как наши данные периодичны с периодом в год, то вместо ARIMA, нужно использовать ARIMA с поддержкой сезонности -
+SARMIMA. SARIMA - это модель, которая обобщает линейную регрессию, всзвешенное усреднение, диференцирование временнного
+ряда, экспоненциальное сглаживание. Это все простые модели, которые можно проверить на наших данных, использовав только
+1 модель - SARIMA.
+
+SARIMA делает следующие допущения насчет данных - временной ряд стационарен:
+\begin{itemize}
+\item нет тренда
+\item нет сезонности
+\item дисперсия всюду одинакова
+\end{itemize}
+
+Проверку всех этих предположений, исправляение нестационарного ряда в стационарный и примененине SARMIMA реализовано в
+пакете facebook prophet
+
+\begin{center}
+\includegraphics[width=15cm]{./pics/fb_prophet_prediction_1.png}
+\end{center}
+\begin{center}
+\includegraphics[width=15cm,height=10cm]{./pics/fb_prophet_prediction_2.png}
+\end{center}
+
+Из графиков видно, что fb prophet настраивается на тренд, но на колебания возле тренда настроится не может
+\subsection{XGBoost}
+\label{sec:org1d83c51}
+\begin{center}
+\includegraphics[width=15cm]{./pics/xgboost_predictions_3_cities.png}
+\end{center}
+
+
+\begin{center}
+\includegraphics[width=15cm]{./pics/xgboost_feature_importance_3_cities.png}
+\end{center}
+
+После добавления еще 3х городов между Брайтон энд Хов и Лондоном
+
+
+\begin{center}
+\includegraphics[width=15cm]{./pics/dartford_crawley_brancknell.png}
+\end{center}
+
+
+\begin{center}
+\includegraphics[width=15cm]{./pics/xgboost_feature_importance_6_cities.png}
+\end{center}
+
+
+\begin{center}
+\includegraphics[width=15cm]{./pics/xgboost_predictions_3_cities.png}
+\end{center}
+
+\subsection{Результаты экспериментов}
+\label{sec:org61b6a81}
+baseline модель предсказывает температуру на следующий час по предыдущему значению, для нее нет смысла в разделении
+выборки на обучающую и тренировочную
+
+\begin{center}
+\begin{tabular}{lrl}
+модель & mae на валидационной выборке, градусы цельсия & mae на обучающей выборке, градусы цельсия\\
+\hline
+baseline & 2.20 & -\\
+MLP & 2.00 & \\
+LSTM & 1.99 & \\
+XGBoost, 6 городов & 0.18 & 0.176\\
+XGBoost, 3 города & 0.46 & 0.427\\
+SARIMA(fb prophet) & 9.2 & \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Ссылки}
+\label{sec:orgc1a8b19}
+\href{http://www.machinelearning.ru/wiki/images/archive/f/fc/20130211221536\%21Voron-ML-Intro-slides.pdf}{Основные понятия и обозначения в машинном обучении. Воронцов К.В.}
+\end{document}

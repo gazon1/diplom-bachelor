@@ -1,17 +1,21 @@
 import logging
-import requests
-from darksky import forecast
-import datetime
-from datetime import datetime as dt
-import pandas as pd
-import numpy as np
-import requests
 from tqdm import tqdm
 import os
 import json
 
+import requests
 
-CURRENT_DIR = '.'#'tmp/diplom/'
+from darksky import forecast
+
+import datetime
+from datetime import datetime as dt
+from datetime import timedelta
+
+import pandas as pd
+import numpy as np
+
+
+CURRENT_DIR = '.'  #'tmp/diplom/'
 
 
 def to_date_from_unix_time(timestamp):
@@ -45,9 +49,9 @@ def get_keys():
     
     return keys
 
-def get_cities():
+def get_cities(cities_to_select=None):
     cities = [
-       ('Oxford',51.7517,-1.2553),
+        ('Oxford',51.7517,-1.2553),
         ('Exeter',50.7184,-3.5339),
         ('Truro',50.2632,-5.051),
         ('Carmarthen',51.8576,-4.3121),
@@ -70,12 +74,30 @@ def get_cities():
         ('Aberdeen',57.1497,-2.0943),
         ('Fort Augustus',57.1448,-4.6805),
         ('Lairg',58.197,-4.6173),
-        ('Oxford',51.7517,-1.2553),
-    #     ('Inverey',56.9855,-3.5055),
+        ('Inverey',56.9855,-3.5055),
         ('Shrewsbury',52.7069,-2.7527),
         ('Colwyn Bay',53.2932,-3.7276),
         ('Newton Stewart',54.9186,-4.5918),    
-        ('Portsmouth',50.80034751,-1.080022218)]
+        ('Portsmouth',50.80034751,-1.080022218),
+        ("Crawley", 51.10914, -0.18722),
+        ("Dartford", 51.44, 0.22), #https://www.worldatlas.com/eu/gb/eng/where-is-dartford.html
+        ("Brancknell", 51.41, -0.75) #https://latitudelongitude.org/gb/bracknell/
+    ]
+
+    to_return = []
+    if cities_to_select:
+
+        names = [i[0] for i in cities]
+        for i in cities_to_select:
+            assert i in names
+        
+        for i in cities_to_select:
+            for j in cities:
+                if j[0] == i:
+                    to_return.append(j)
+
+        return to_return
+    
     return cities
 
 #TODO писать в фалй название города, которого не удалось полностью закачать
@@ -84,21 +106,63 @@ def get_cities():
 columns = ["temperature", "windSpeed", "cloudCover", "humidity", "visibility", "icon",
                "apparentTemperature", "summary", "dewPoint"]
 
+
+def get_list_of_days(date_start: dt, date_end: dt):
+    assert date_end > date_start
+    delta = date_end - date_start
+
+    list_of_days = []
+    for i in range(delta.days + 1):
+        date = date_start + timedelta(i)
+        date = date.isoformat()
+        list_of_days.append(date)
+
+    return list_of_days
+
+
+def to_download():
+    return [
+        ]
+    
+
+def get_last_downloaded_date(city: str, default_start_date=dt(2009, 1, 1, hour=0)):
+    if f"{city}.csv" in os.listdir(os.path.join(CURRENT_DIR, "diplom_data/")):
+        with open(f"diplom_data/{city}.csv", "r") as f:
+            for line in f:
+                pass
+        last_date = dt.strptime(line.split()[0], "%Y-%m-%d")
+        return last_date
+    else:
+        return default_start_date
+                
+    
 if __name__ == "__main__":
 
     keys = get_keys()
     logger = get_logger()
-    cities = get_cities()
+ #   cities = get_cities()
 
-    cities = [city for city in cities if str(city[0]) + ".csv" not in os.listdir(os.path.join(CURRENT_DIR, "diplom_data/"))] 
+#    cities = [city for city in cities if str(city[0]) + ".csv" not in os.listdir(os.path.join(CURRENT_DIR, "diplom_data/"))] 
     keys = {key: value for key, value in keys.items() if value == False}
 
-    base = dt(2017, 1, 1, hour=0)
-    date_list = [base + datetime.timedelta(days=x) for x in range(0, 730)]
-    date_list = [t.isoformat() for t in date_list]
+#    cities = get_cities(['Oxford', 'Cambridge', 'Brighton And Hove', 'London'])
 
+    cities = get_cities(['Crawley', 'Dartford', 'Brancknell'])
+
+    
+    
     for city, key in zip(cities[: len(keys)], keys.keys()): 
         df = pd.DataFrame()
+#        date_start = dt(2009, 1, 1, hour=0)
+        date_start = get_last_downloaded_date(city[0])
+        date_end = dt(2018, 1, 1, hour=0)
+
+        try:
+            date_list = get_list_of_days(date_start, date_end)
+        except AssertionError:
+            continue
+
+        
         logger.info(f"Скачиваю данные с города {city[0]}")
         for date in tqdm(date_list):
             try:
@@ -130,10 +194,17 @@ if __name__ == "__main__":
         if df.shape[0] > 0:
             df.columns = ["time"] + columns
             df = df.set_index("time")
-            df.to_csv(os.path.join(CURRENT_DIR, "diplom_data/" + str(city[0]) + ".csv"), index=True)
+
+            path = os.path.join(CURRENT_DIR, "diplom_data/" + str(city[0]) + ".csv")
+            with open(path, 'a') as f:
+                df.to_csv(f, index=True, header=False)
 
         keys[key] = True #key is used, dont use it again today
 
 
     with open(os.path.join(CURRENT_DIR, 'file.txt'), 'w') as file:
          file.write(json.dumps(keys))    
+
+
+
+
