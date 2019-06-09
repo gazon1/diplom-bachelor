@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+
+\bibitem{Spatial-Interpolation-2000-Snell}
+Seth~E. Snell, Sucharita Gopal, and Robert~K. Kaufmann.
+\newblock Spatial interpolation of surface air temperatures using artificial
+  neural networks: Evaluating their use for downscaling gcms.
+\newblock {\em Journal of Climate}, 13(5):886--895, 2000.
+
+\bibitem{nn-prediction-hourly-mean-temp-Tasadduq-2002}
+Imran Tasadduq, Shafiqur Rehman, and Khaled Bubshait.
+\newblock Application of neural networks for the prediction of hourly mean
+  surface temperatures in saudi arabia.
+\newblock {\em Renewable Energy}, 25(4):545 -- 554, 2002.
+
+\end{thebibliography}
